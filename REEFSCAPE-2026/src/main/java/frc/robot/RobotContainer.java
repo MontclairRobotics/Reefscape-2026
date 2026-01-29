@@ -56,10 +56,10 @@ public class RobotContainer {
   private void configureDriverBindings() {
 
     // ************* DRIVER CONTROLLER BINDINGS **************** //
-    driverController
-        .L2()
-        .onTrue(Commands555.disableFieldRelative())
-        .onFalse(Commands555.enableFieldRelative());
+    // driverController
+    //     .L2()
+    //     .onTrue(Commands555.disableFieldRelative())
+    //     .onFalse(Commands555.enableFieldRelative());
     
     
     
@@ -81,52 +81,52 @@ public class RobotContainer {
 
     BooleanSupplier isOnBlueAlliance = () -> DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue;
 
-    driverController
-      .triangle()
-      .onTrue(new ConditionalCommand(
-        Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(0), false), 
-        Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(180), false), 
-        isOnBlueAlliance));
+    // driverController
+    //   .triangle()
+    //   .onTrue(new ConditionalCommand(
+    //     Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(0), false), 
+    //     Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(180), false), 
+    //     isOnBlueAlliance));
       
-    driverController
-      .circle()
-      .onTrue(new ConditionalCommand(
-        Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(-90), false), 
-        Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(90), false), 
-        isOnBlueAlliance));
+    // driverController
+    //   .circle()
+    //   .onTrue(new ConditionalCommand(
+    //     Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(-90), false), 
+    //     Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(90), false), 
+    //     isOnBlueAlliance));
     
-    driverController
-      .cross()
-      .onTrue(new ConditionalCommand(
-        Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(180), false), 
-        Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(0), false), 
-        isOnBlueAlliance));
+    // driverController
+    //   .cross()
+    //   .onTrue(new ConditionalCommand(
+    //     Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(180), false), 
+    //     Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(0), false), 
+    //     isOnBlueAlliance));
 
-    driverController
-        .square()
-        .onTrue(new ConditionalCommand(
-          Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(90), false), 
-          Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(-90), false),
-          isOnBlueAlliance));
+    // driverController
+    //     .square()
+    //     .onTrue(new ConditionalCommand(
+    //       Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(90), false), 
+    //       Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(-90), false),
+    //       isOnBlueAlliance));
 
-    driverController
-        .touchpad()
-        .onTrue(Commands555.zeroGyro()
-                .ignoringDisable(true));
-    driverController.PS().onTrue(Commands555.lockDrive());
+    // driverController
+    //     .touchpad()
+    //     .onTrue(Commands555.zeroGyro()
+    //             .ignoringDisable(true));
+    // driverController.PS().onTrue(Commands555.lockDrive());
 
     
     
-    if (isOnBlueAlliance.getAsBoolean()) {
-      driverController.povDown().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(60), false));
-      driverController.povRight().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(300), false));
-      driverController.povUp().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(180), false));
+    // if (isOnBlueAlliance.getAsBoolean()) {
+    //   driverController.povDown().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(60), false));
+    //   driverController.povRight().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(300), false));
+    //   driverController.povUp().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(180), false));
 
-    } else {
-      driverController.povDown().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(-120), false));
-      driverController.povRight().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(120), false));
-      driverController.povUp().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(0), false));
-    }    
+    // } else {
+    //   driverController.povDown().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(-120), false));
+    //   driverController.povRight().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(120), false));
+    //   driverController.povUp().onTrue(Commands555.goToAngleFieldRelative(Rotation2d.fromDegrees(0), false));
+    // }    
                     
   }
   private void configureOperatorBindings() {
