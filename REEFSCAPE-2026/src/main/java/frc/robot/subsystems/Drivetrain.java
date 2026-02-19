@@ -128,8 +128,17 @@ public class Drivetrain extends SubsystemBase {
 
     
     // Shuffleboard.getTab("Debug").addDouble("Wrapped Angle", () -> RobotContainer.drivetrain.getWrappedRotation().getDegrees());
-    Shuffleboard.getTab("Debug").addDouble("Front Left Velocity", () -> {
-      return swerveDrive.getModules()[0].getDriveMotor().getVelocity();
+    Shuffleboard.getTab("Debug").addDouble("Front Left Encoder", () -> {
+      return swerveDrive.getModules()[0].getAbsolutePosition();
+    });
+    Shuffleboard.getTab("Debug").addDouble("Front Right Encoder", () -> {
+      return swerveDrive.getModules()[1].getAbsolutePosition();
+    });
+    Shuffleboard.getTab("Debug").addDouble("Back Left Encoder", () -> {
+      return swerveDrive.getModules()[2].getAbsolutePosition();
+    });
+    Shuffleboard.getTab("Debug").addDouble("Back Right Encoder", () -> {
+      return swerveDrive.getModules()[3].getAbsolutePosition();
     });
 
 
@@ -187,19 +196,19 @@ public class Drivetrain extends SubsystemBase {
     return Rotation2d.fromDegrees(degrees);
   }
 
-  public void playMusic() {
-    System.out.println("MUUUUSIC");
-    orchestra.play();
-  }
+  // public void playMusic() {
+  //   System.out.println("MUUUUSIC");
+  //   orchestra.play();
+  // }
 
-  public void stopMusic() {
-    orchestra.stop();
-  }
+  // public void stopMusic() {
+  //   orchestra.stop();
+  // }
 
   /** It drives with certain linear velocities with a certain rotational velocity */
   public void drive(Translation2d translation, double rotation) {
     
-    swerveDrive.drive(translation, rotation, true, false); //this.isFieldRelative, DriveConstants.IS_OPEN_LOOP);
+    swerveDrive.drive(translation, rotation, false, false); //this.isFieldRelative, DriveConstants.IS_OPEN_LOOP);
   }
 
   
