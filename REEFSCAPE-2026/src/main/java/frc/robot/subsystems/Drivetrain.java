@@ -46,6 +46,8 @@ import frc.robot.Constants.FieldConstants;
 
 import java.io.File;
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -53,6 +55,7 @@ import org.littletonrobotics.junction.Logger;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
 import swervelib.SwerveModule;
+import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
@@ -71,16 +74,16 @@ public class Drivetrain extends SubsystemBase {
   SwerveModule[] modules;
   Orchestra orchestra;
 
- private boolean isFieldRelative;
- private ChassisSpeeds velocityFromController;
+  private boolean isFieldRelative;
+  private ChassisSpeeds velocityFromController;
 
- private boolean logModuleStates = true;
+  private boolean logModuleStates = true;
 
   // private AHRS navX;
 
   public Drivetrain(File directory) {
     velocityFromController = new ChassisSpeeds();
-    this.isFieldRelative = true;
+    this.isFieldRelative = false;
 
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.NONE;
 
@@ -92,8 +95,8 @@ public class Drivetrain extends SubsystemBase {
       throw new RuntimeException(e);
     }
 
-    SimpleMotorFeedforward ff = new SimpleMotorFeedforward(DriveConstants.DRIVE_KS, DriveConstants.DRIVE_KV, DriveConstants.DRIVE_KA);
-    swerveDrive.replaceSwerveModuleFeedforward(ff);
+    //SimpleMotorFeedforward ff = new SimpleMotorFeedforward(DriveConstants.DRIVE_KS, DriveConstants.DRIVE_KV, DriveConstants.DRIVE_KA);
+    //swerveDrive.replaceSwerveModuleFeedforward(ff);
 
     // Shuffleboard.getTab("Debug").addDouble("Drivetrain/FrontLeftVoltage", getSwerveDrive().getModules()[0].getDriveMotor()::getVoltage);
     modules = swerveDrive.getModules();
@@ -156,7 +159,22 @@ public class Drivetrain extends SubsystemBase {
     //   return motors.get(3).getVelocity().getValueAsDouble();
     // });
 
-    
+    swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while controlling the robot via angle.
+    swerveDrive.setCosineCompensator(false);//!SwerveDriveTelemetry.isSimulation); // Disables cosine compensation for simulations since it causes discrepancies not seen in real life.
+    swerveDrive.setAngularVelocityCompensation(true,
+                                               true,
+                                               0.1); //Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
+    swerveDrive.setModuleEncoderAutoSynchronize(false,
+                                                1); // Enable if you want to resynchronize your absolute encoders and motor encoders periodically when they are not moving.
+    // swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
+
+    boolean blueAlliance = DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue;
+    Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(1),
+                                                                      Meter.of(4)),
+                                                    Rotation2d.fromDegrees(0))
+                                       : new Pose2d(new Translation2d(Meter.of(16),
+                                                                      Meter.of(4)),
+                                                    Rotation2d.fromDegrees(180));
   }
 
   //From GeometryUtils last year
@@ -334,7 +352,8 @@ public void setInputFromController(CommandPS5Controller controller) {
        ySpeed *= -1;
     }
 
-    Translation2d targetTranslation = new Translation2d(ySpeed, xSpeed);
+    //Translation2d targetTranslation = new Translation2d(ySpeed, xSpeed);
+    Translation2d targetTranslation = new Translation2d(xSpeed, ySpeed);
 
     // TODO: Converts a translation to a chassisSpeeds, used for advantagekit logging in drivetrain periodic, probably a better way to do it but this is fast and it works.
     this.velocityFromController = this.isFieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(targetTranslation.getX(), targetTranslation.getY(), thetaSpeed, this.swerveDrive.getOdometryHeading()) : new ChassisSpeeds(targetTranslation.getX(), targetTranslation.getY(), thetaSpeed);
@@ -482,4 +501,82 @@ public void setInputFromController(CommandPS5Controller controller) {
 
       return r_translation.minus(t_translation).getAngle();
     }  
+
+
+    //EVERYTHING BELOW HERE IS YAGSL EXAMPLE CODE BECAUSE I GAVE UP AND GAVE IN -danica :)
+
+    /**
+   * Drive the robot given a chassis field oriented velocity.
+   *
+   * @param velocity Velocity according to the field.
+   */
+  public void driveFieldOriented(ChassisSpeeds velocity)
+  {
+    swerveDrive.driveFieldOriented(velocity);
+  }
+
+  /**
+   * Drive the robot given a chassis field oriented velocity.
+   *
+   * @param velocity Velocity according to the field.
+   */
+  public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity)
+  {
+    return run(() -> {
+      swerveDrive.driveFieldOriented(velocity.get());
+    });
+  }
+
+  /**
+   * The primary method for controlling the drivebase.  Takes a {@link Translation2d} and a rotation rate, and
+   * calculates and commands module states accordingly.  Can use either open-loop or closed-loop velocity control for
+   * the wheel velocities.  Also has field- and robot-relative modes, which affect how the translation vector is used.
+   *
+   * @param translation   {@link Translation2d} that is the commanded linear velocity of the robot, in meters per
+   *                      second. In robot-relative mode, positive x is torwards the bow (front) and positive y is
+   *                      torwards port (left).  In field-relative mode, positive x is away from the alliance wall
+   *                      (field North) and positive y is torwards the left wall when looking through the driver station
+   *                      glass (field West).
+   * @param rotation      Robot angular rate, in radians per second. CCW positive.  Unaffected by field/robot
+   *                      relativity.
+   * @param fieldRelative Drive mode.  True for field-relative, false for robot-relative.
+   */
+  public void drive(Translation2d translation, double rotation, boolean fieldRelative)
+  {
+    swerveDrive.drive(translation,
+                      rotation,
+                      fieldRelative,
+                      false); // Open loop is disabled since it shouldn't be used most of the time.
+  }
+
+
+  /**
+   * Command to drive the robot using translative values and heading as a setpoint.
+   *
+   * @param translationX Translation in the X direction. Cubed for smoother controls.
+   * @param translationY Translation in the Y direction. Cubed for smoother controls.
+   * @param headingX     Heading X to calculate angle of the joystick.
+   * @param headingY     Heading Y to calculate angle of the joystick.
+   * @return Drive command.
+   */
+  public Command driveCommand(DoubleSupplier translationX, DoubleSupplier translationY, DoubleSupplier headingX,
+                              DoubleSupplier headingY)
+  {
+    // swerveDrive.setHeadingCorrection(true); // Normally you would want heading correction for this kind of control.
+    return run(() -> {
+
+      Translation2d scaledInputs = SwerveMath.scaleTranslation(new Translation2d(translationX.getAsDouble(),
+                                                                                 translationY.getAsDouble()), 0.8);
+
+      // Make the robot move
+      driveFieldOriented(swerveDrive.swerveController.getTargetSpeeds(scaledInputs.getX(), scaledInputs.getY(),
+                                                                      headingX.getAsDouble(),
+                                                                      headingY.getAsDouble(),
+                                                                      swerveDrive.getOdometryHeading().getRadians(),
+                                                                      swerveDrive.getMaximumChassisVelocity()));
+    });
+  }
+
+  
+
 }

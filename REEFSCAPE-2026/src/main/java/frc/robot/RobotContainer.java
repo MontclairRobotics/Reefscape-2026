@@ -19,7 +19,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Drivetrain;
+import swervelib.SwerveInputStream;
 
 
 public class RobotContainer {
@@ -36,21 +38,39 @@ public class RobotContainer {
   
   public static boolean isDriverMode = false;
 
+  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivetrain.getSwerveDrive(),
+                                                                () -> driverController.getLeftY() * -1,
+                                                                () -> driverController.getLeftX() * -1)
+                                                            .withControllerRotationAxis(driverController::getRightX)
+                                                            .deadband(0.2)
+                                                            .scaleTranslation(0.8)
+                                                            .allianceRelativeControl(true);
+
   public RobotContainer() {
 
     // auto.setupPathPlanner();
     // auto.setupAutoTab();
     setupDriverTab();
     
-    drivetrain.setDefaultCommand(
-        Commands.run(
-            () -> {
-              drivetrain.setInputFromController(driverController);
-            },
-            drivetrain));
+    // drivetrain.setDefaultCommand(
+    //     Commands.run(
+    //         () -> {
+    //           drivetrain.setInputFromController(driverController);
+    //         },
+    //         drivetrain));
+
+    Command driveFieldOrientedAnglularVelocity = drivetrain.driveFieldOriented(driveAngularVelocity);
+    drivetrain.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     configureDriverBindings();
     configureOperatorBindings();
+
+    Shuffleboard.getTab("Debug").addDouble("controller x input", () -> {
+      return driverController.getLeftX();
+    });
+    Shuffleboard.getTab("Debug").addDouble("controller y input", () -> {
+      return driverController.getLeftY();
+    });
   }
 
   private void configureDriverBindings() {
