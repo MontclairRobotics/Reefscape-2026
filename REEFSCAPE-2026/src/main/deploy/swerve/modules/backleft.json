@@ -3,7 +3,7 @@
     "front": -12.126,
     "left": 12.126
   },
-  "absoluteEncoderOffset": 67.32,
+  "absoluteEncoderOffset": -128.49624,
   "drive": {
     "type": "talonfx",
     "id": 3,
@@ -11,7 +11,7 @@
   },
   "inverted": {
     "drive": false,
-    "angle": false
+    "angle": true
   },
   "angle": {
     "type": "sparkmax",
